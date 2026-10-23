@@ -1,0 +1,1274 @@
+<!-- ... existing code ... ... Entire file updated ... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coco Villa Unawatuna - Invoice & Receipt Generator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Outfit & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          colors: {
+            coco: {
+              navy: '#1b365d',
+              navyDark: '#10223b',
+              palm: '#166534',
+              palmlight: '#22c55e',
+              sand: '#fbf9f5',
+              accent: '#d97706',
+              border: '#e2e8f0'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* A4 Dimensions and Screen Display Simulation */
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      background: #ffffff;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      padding: 16mm 18mm 14mm 18mm;
+    }
+
+    /* Print Specific Styling: strictly prints ONLY the A4 document */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      html, body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .a4-sheet {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 297mm !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 14mm 16mm 12mm 16mm !important;
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+    }
+
+    /* Custom Scrollbar for form view */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Paid Stamp Simulation */
+    .paid-stamp {
+      border: 3.5px dashed #166534;
+      transform: rotate(-8deg);
+      text-shadow: 0 0 1px rgba(22, 101, 52, 0.3);
+      background: rgba(240, 253, 244, 0.9);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased font-sans flex flex-col min-h-screen">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-coco-navy text-white shadow-md sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Static Coco Villa Header Badge -->
+        <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center p-1.5 text-emerald-300">
+          <svg viewBox="0 0 200 200" class="w-full h-full fill-none stroke-current" stroke-width="8">
+            <path d="M75 140 A 55 55 0 1 1 145 90" stroke-linecap="round"/>
+            <path d="M100 85 L130 55 L160 85" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="115" y1="70" x2="115" y2="120"/>
+            <line x1="130" y1="60" x2="130" y2="120"/>
+            <line x1="145" y1="70" x2="145" y2="120"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-lg leading-tight tracking-tight text-white flex items-center gap-2">
+            Coco Villa <span class="text-[11px] bg-emerald-800/80 text-emerald-200 font-normal px-2 py-0.5 rounded-full uppercase tracking-wider">Unawatuna</span>
+          </h1>
+          <p class="text-xs text-slate-300">Billing &amp; Payment Generator</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button type="button" onclick="loadSampleGuest()" title="Fill with sample stay data" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition">
+          ⚡ Sample (Yotam)
+        </button>
+
+        <button type="button" onclick="openWhatsAppModal()" class="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition shadow-sm">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.299.144.347.491 1.2.534 1.288.043.088.072.19.014.306-.058.115-.087.187-.173.289l-.26.306c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.144.39-.086s1.011.477 1.184.564.289.13.332.203c.043.072.043.419-.101.824z"/>
+          </svg>
+          <span class="hidden sm:inline">WhatsApp</span>
+        </button>
+
+        <button type="button" onclick="window.print()" class="px-4 py-1.5 rounded-lg bg-coco-navy hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition shadow border border-sky-400/30">
+          <svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Print / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container: Form on Left / Preview on Right -->
+  <main class="flex-1 max-w-[1720px] w-full mx-auto p-3 sm:p-5 flex flex-col lg:flex-row gap-6">
+
+    <!-- LEFT PANEL: GENERATOR FORM CONTROLS -->
+    <section class="w-full lg:w-[490px] xl:w-[530px] shrink-0 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col no-print max-h-[calc(100vh-80px)] overflow-hidden">
+      <!-- Mode Switcher: Invoice vs Receipt -->
+      <div class="p-4 border-b border-slate-200 bg-slate-50/80">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Document Type</label>
+          <button type="button" onclick="clearForm()" class="text-[11px] text-rose-600 hover:text-rose-700 font-medium hover:underline">Clear Form</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2 bg-slate-200 p-1 rounded-lg">
+          <button type="button" id="tab-invoice" onclick="setDocType('INVOICE')" class="py-2 text-xs sm:text-sm font-bold rounded-md transition shadow-sm bg-white text-coco-navy">
+            📄 Official Invoice
+          </button>
+          <button type="button" id="tab-receipt" onclick="setDocType('RECEIPT')" class="py-2 text-xs sm:text-sm font-bold rounded-md transition text-slate-600 hover:text-slate-900">
+            ✅ Payment Receipt
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Form Inputs -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-5 text-sm">
+
+        <!-- 1. Guest & Booking Information -->
+        <fieldset class="border border-slate-200 rounded-lg p-3 sm:p-4 bg-slate-50/40">
+          <legend class="text-xs font-bold uppercase tracking-wider text-slate-700 px-2 bg-white rounded border border-slate-200">
+            1. Guest &amp; Stay Information
+          </legend>
+
+          <div class="space-y-3 mt-1">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Guest Full Name</label>
+              <input type="text" id="inp-guest-name" value="Yotam Zakai" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Document #</label>
+                <input type="text" id="inp-doc-num" value="INV-2026-1022" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 font-mono text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Issue Date</label>
+                <input type="date" id="inp-doc-date" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 text-xs">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Check-in Date</label>
+                <input type="date" id="inp-checkin" oninput="handleDateChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Check-out Date</label>
+                <input type="date" id="inp-checkout" oninput="handleDateChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 text-xs">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Room Category</label>
+                <input type="text" id="inp-room-type" value="Deluxe Double Room" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Guests</label>
+                <input type="text" id="inp-guests-count" value="1 Adult" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 text-xs">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Booking Reference / Channel</label>
+              <input type="text" id="inp-booking-ref" value="Direct Extension Stay" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 text-xs">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 2. Bank Exchange & Currency -->
+        <fieldset class="border border-slate-200 rounded-lg p-3 sm:p-4 bg-slate-50/40">
+          <legend class="text-xs font-bold uppercase tracking-wider text-slate-700 px-2 bg-white rounded border border-slate-200">
+            2. Currency &amp; Sampath Bank Rate
+          </legend>
+
+          <div class="space-y-3 mt-1">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">USD Selling Rate (LKR)</label>
+                <div class="relative">
+                  <span class="absolute left-2.5 top-1.5 text-xs text-slate-400 font-semibold">1$ =</span>
+                  <input type="number" step="0.5" id="inp-fx-rate" value="336.00" oninput="handleFxChange()" class="w-full pl-12 pr-2 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 font-semibold text-xs">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Exchange Bank</label>
+                <input type="text" id="inp-fx-bank" value="Sampath Bank PLC" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 text-xs">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <label class="text-xs font-medium text-slate-700 cursor-pointer" for="chk-show-usd">Display USD equivalent in brackets [US$ ...]</label>
+              <input type="checkbox" id="chk-show-usd" checked onchange="handleFormChange()" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 3. Dynamic Line Items & Quick Add Buttons -->
+        <fieldset class="border border-slate-200 rounded-lg p-3 sm:p-4 bg-slate-50/40">
+          <div class="flex items-center justify-between mb-2">
+            <legend class="text-xs font-bold uppercase tracking-wider text-slate-700 px-2 bg-white rounded border border-slate-200">
+              3. Billable Items &amp; Services
+            </legend>
+          </div>
+
+          <!-- Quick Add Preset Buttons -->
+          <div class="mb-3">
+            <span class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Quick Add Services:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="quickAddItem('Room Stay', 'Room Stay (Deluxe Double Room)', 1, 'USD', 25.00)" class="px-2 py-1 bg-white border border-slate-300 hover:border-coco-navy text-slate-700 rounded text-xs transition">
+                🛏️ +Room ($25)
+              </button>
+              <button type="button" onclick="quickAddItem('Breakfast', 'Breakfast Service', 1, 'LKR', 1500)" class="px-2 py-1 bg-white border border-slate-300 hover:border-coco-navy text-slate-700 rounded text-xs transition">
+                🍳 +Breakfast (1,500)
+              </button>
+              <button type="button" onclick="quickAddItem('Lunch', 'Lunch Service', 1, 'LKR', 1800)" class="px-2 py-1 bg-white border border-slate-300 hover:border-coco-navy text-slate-700 rounded text-xs transition">
+                🥗 +Lunch (1,800)
+              </button>
+              <button type="button" onclick="quickAddItem('Dinner', 'Dinner Service', 1, 'LKR', 2200)" class="px-2 py-1 bg-white border border-slate-300 hover:border-coco-navy text-slate-700 rounded text-xs transition">
+                🍲 +Dinner (2,200)
+              </button>
+              <button type="button" onclick="quickAddItem('Extra Service', 'Netflix streaming access during stay', 1, 'USD', 2.50)" class="px-2 py-1 bg-white border border-slate-300 hover:border-coco-navy text-slate-700 rounded text-xs transition">
+                📺 +Netflix ($2.50)
+              </button>
+              <button type="button" onclick="quickAddItem('Transfer', 'Tuk-Tuk / Taxi Transfer', 1, 'LKR', 2500)" class="px-2 py-1 bg-white border border-slate-300 hover:border-coco-navy text-slate-700 rounded text-xs transition">
+                🛺 +Transfer (2,500)
+              </button>
+              <button type="button" onclick="addNewLineItem()" class="px-2 py-1 bg-coco-navy text-white rounded text-xs font-semibold hover:bg-slate-800 transition">
+                + Custom Item
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Item Rows -->
+          <div id="line-items-container" class="space-y-3">
+            <!-- Populated via JavaScript -->
+          </div>
+        </fieldset>
+
+        <!-- 4. Prior Balance / Deductions / Change Credits -->
+        <fieldset class="border border-slate-200 rounded-lg p-3 sm:p-4 bg-slate-50/40">
+          <legend class="text-xs font-bold uppercase tracking-wider text-slate-700 px-2 bg-white rounded border border-slate-200">
+            4. Prior Change Credit / Deductions
+          </legend>
+          <div class="space-y-3 mt-1">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Credit / Deducted Amount (LKR)</label>
+              <div class="flex gap-2">
+                <input type="number" step="1" id="inp-deduction" value="0" oninput="handleFormChange()" class="w-32 px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-emerald-700 text-xs">
+                <input type="text" id="inp-deduction-reason" value="Credit change balance owed from previous invoice" oninput="handleFormChange()" placeholder="Reason for reduction" class="flex-1 px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-slate-700 text-xs">
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Example: enter 352 to deduct LKR 352.00 remaining change from earlier note.</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 5. Payment Tendered (Receipt Controls) -->
+        <fieldset id="section-payment-controls" class="border border-emerald-300 bg-emerald-50/40 rounded-lg p-3 sm:p-4">
+          <legend class="text-xs font-bold uppercase tracking-wider text-emerald-800 px-2 bg-white rounded border border-emerald-300">
+            5. Payment Settlement (Receipt Mode)
+          </legend>
+
+          <div class="space-y-3 mt-1">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Cash Tendered / Paid (LKR)</label>
+                <input type="number" step="100" id="inp-cash-paid" value="31500" oninput="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-900 text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Payment Method</label>
+                <select id="inp-pay-method" onchange="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-xs bg-white">
+                  <option value="Cash (LKR)">Cash (LKR)</option>
+                  <option value="Cash (USD)">Cash (USD)</option>
+                  <option value="Sampath Bank Transfer">Sampath Bank Transfer</option>
+                  <option value="Credit / Debit Card">Credit / Debit Card</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Settlement Status</label>
+              <select id="inp-settlement-status" onchange="handleFormChange()" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none text-xs bg-white">
+                <option value="FULL">Account Fully Settled (Zero Balance)</option>
+                <option value="CHANGE_RETURNED">Change Handed Over to Guest in Cash</option>
+                <option value="CHANGE_PENDING">Change Pending Return to Guest</option>
+                <option value="PARTIAL">Partial Payment Received</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Static Property Information Note -->
+        <div class="p-3 bg-slate-100 rounded-lg text-xs text-slate-500 space-y-1">
+          <div class="font-bold text-slate-700 flex items-center gap-1.5">
+            <span>📍</span> Static Brand Details (Always Embedded)
+          </div>
+          <div><strong>Coco Villa Unawatuna</strong> • 70/7 Eramudugaha Junction, Matara Road, Unawatuna, Galle 80600</div>
+          <div>Mobile: +94 71 256 6198 • Email: cocovilla.info@gmail.com</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: LIVE A4 PRINT & PDF PREVIEW -->
+    <section class="flex-1 flex flex-col items-center overflow-x-auto pb-12">
+      <!-- Live Preview Top Notification Banner -->
+      <div class="w-full max-w-[210mm] mb-3 flex items-center justify-between text-xs text-slate-500 px-1 no-print">
+        <span class="flex items-center gap-1.5 font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Live A4 Print Preview
+        </span>
+        <span class="text-slate-400">ISO 216 Portrait (210mm × 297mm)</span>
+      </div>
+
+      <!-- Printable A4 Document Sheet -->
+      <article id="print-sheet" class="a4-sheet text-slate-800">
+
+        <!-- Top Content Block -->
+        <div>
+          <!-- Document Masthead / Header -->
+          <div id="doc-header-row" class="flex justify-between items-start pb-4 border-b-2 border-coco-navy transition-colors duration-200">
+            <!-- Static Coco Villa Logo & Brand -->
+            <div class="flex items-center gap-4">
+              <!-- Static Logo Element: Uses logo.webp with clean SVG fallback -->
+              <div class="w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                <img src="logo.webp" alt="Coco Villa Logo" onerror="this.onerror=null; this.style.display='none'; document.getElementById('svg-logo-fallback').style.display='block';" class="w-full h-full object-contain">
+                
+                <!-- High Fidelity Inline SVG Fallback matching the Palm and Villa architecture -->
+                <svg id="svg-logo-fallback" viewBox="0 0 200 200" style="display: none;" class="w-full h-full text-coco-navy fill-none stroke-current" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- Circular Palm Arc -->
+                  <path d="M70 145 A 60 60 0 1 1 150 95" stroke-width="7"/>
+                  <!-- Palm Fronds -->
+                  <path d="M102 30 C90 12, 65 18, 60 30 C75 32, 92 28, 102 30 Z" fill="#166534" stroke="#166534" stroke-width="2"/>
+                  <path d="M102 30 C115 15, 140 18, 145 32 C130 32, 115 28, 102 30 Z" fill="#166534" stroke="#166534" stroke-width="2"/>
+                  <path d="M102 30 C80 40, 60 55, 62 65 C78 55, 95 45, 102 30 Z" fill="#166534" stroke="#166534" stroke-width="2"/>
+                  <path d="M102 30 C125 40, 142 55, 140 65 C125 55, 110 45, 102 30 Z" fill="#166534" stroke="#166534" stroke-width="2"/>
+                  <!-- Villa Roof Structure -->
+                  <path d="M95 105 L135 68 L175 105" stroke-width="6"/>
+                  <!-- Vertical Villa Pillars -->
+                  <line x1="110" y1="110" x2="110" y2="135" stroke-width="5"/>
+                  <line x1="125" y1="95" x2="125" y2="135" stroke-width="5"/>
+                  <line x1="140" y1="80" x2="140" y2="135" stroke-width="5"/>
+                  <line x1="155" y1="95" x2="155" y2="135" stroke-width="5"/>
+                  <line x1="170" y1="110" x2="170" y2="135" stroke-width="5"/>
+                </svg>
+              </div>
+
+              <div>
+                <h1 class="font-display font-black text-2xl tracking-tight text-coco-navy leading-none">
+                  COCO VILLA
+                </h1>
+                <p class="font-display uppercase tracking-widest text-xs font-semibold text-coco-palm mt-0.5">
+                  Unawatuna
+                </p>
+                <p class="text-[12px] text-slate-500 mt-1 leading-snug">
+                  70/7 Eramudugaha Junction, Matara Road, Unawatuna, Galle 80600
+                </p>
+                <p class="text-[11.5px] text-slate-500 leading-snug">
+                  Mobile / WhatsApp: <strong class="text-slate-700 font-semibold">+94 71 256 6198</strong> &nbsp;|&nbsp; 
+                  Email: <span class="text-slate-700">cocovilla.info@gmail.com</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Doc Badge & Metadata -->
+            <div class="text-right">
+              <div id="view-doc-title" class="font-display font-black text-xl tracking-wider uppercase text-coco-navy">
+                Official Invoice
+              </div>
+              <div class="mt-1 text-[11.5px] text-slate-600 leading-tight space-y-0.5">
+                <div><span class="text-slate-400">Date:</span> <strong id="view-doc-date" class="text-slate-800">Oct 22, 2026</strong></div>
+                <div><span class="text-slate-400">Document #:</span> <strong id="view-doc-num" class="text-slate-800 font-mono">INV-2026-1022</strong></div>
+                <div><span class="text-slate-400">Reference:</span> <span id="view-booking-ref" class="text-slate-800 font-medium">Direct Stay</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guest & Stay Cards Grid -->
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <!-- Guest Card -->
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[12px]">
+              <div id="view-card-title-1" class="font-bold text-[10px] uppercase tracking-wider text-coco-navy mb-1.5">
+                Guest Information
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Guest Name:</span>
+                  <strong id="view-guest-name" class="text-slate-900 font-semibold text-right">Yotam Zakai</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Guests:</span>
+                  <span id="view-guests-count" class="text-slate-800 font-medium">1 Adult</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Payment Channel:</span>
+                  <span id="view-pay-method" class="text-slate-800 font-medium">Direct Cash</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stay Card -->
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[12px]">
+              <div id="view-card-title-2" class="font-bold text-[10px] uppercase tracking-wider text-coco-navy mb-1.5">
+                Stay Details
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Room Category:</span>
+                  <strong id="view-room-type" class="text-slate-900 font-semibold text-right">Deluxe Double Room</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Check-in:</span>
+                  <span id="view-checkin" class="text-slate-800 font-medium">Tue, Oct 20, 2026</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Check-out:</span>
+                  <span id="view-checkout" class="text-slate-800 font-medium">Fri, Oct 23, 2026</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Currency Exchange Banner -->
+          <div id="view-fx-banner" class="mt-3.5 bg-slate-50 border-l-4 border-coco-navy px-3.5 py-2 rounded-r flex justify-between items-center text-[11px] text-slate-800">
+            <div>
+              <span class="font-semibold text-coco-navy">Exchange Rate Reference:</span> 
+              <span id="view-fx-bank">Sampath Bank PLC</span> Selling Rate
+            </div>
+            <div class="font-bold text-coco-navy">
+              1 USD = <span id="view-fx-rate">336.00</span> LKR
+            </div>
+          </div>
+
+          <!-- Charges & Services Table -->
+          <table class="w-full border-collapse mt-4 text-[12px]">
+            <thead>
+              <tr class="bg-slate-100 border-y border-slate-300 text-slate-700 uppercase font-semibold text-[10.5px] tracking-wide">
+                <th class="py-2 px-3 text-left">Description &amp; Dates</th>
+                <th class="py-2 px-2 text-center w-16">Qty</th>
+                <th class="py-2 px-3 text-right w-36">Rate</th>
+                <th class="py-2 px-3 text-right w-44">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="view-items-tbody" class="divide-y divide-slate-200">
+              <!-- Rendered Dynamically -->
+            </tbody>
+            <tfoot class="border-t border-slate-300">
+              <!-- Sub Total -->
+              <tr class="bg-slate-50 font-semibold text-slate-700">
+                <td colspan="3" class="py-2 px-3 text-left">Sub Total</td>
+                <td class="py-2 px-3 text-right font-bold text-slate-800" id="view-subtotal">LKR 0.00</td>
+              </tr>
+
+              <!-- Deduction Row (if any) -->
+              <tr id="view-deduction-row" class="bg-emerald-50/70 text-emerald-800 font-semibold hidden">
+                <td colspan="3" class="py-2 px-3 text-left">
+                  <span class="font-bold">Less: Previous Balance / Change Credit</span>
+                  <span id="view-deduction-note" class="block text-[10.5px] font-normal text-emerald-700"></span>
+                </td>
+                <td class="py-2 px-3 text-right font-bold text-emerald-800" id="view-deduction-val">- LKR 0.00</td>
+              </tr>
+
+              <!-- Net Total Due Row -->
+              <tr id="view-total-due-row" class="bg-slate-100 font-extrabold text-[13.5px] text-slate-900 border-t-2 border-coco-navy border-b-2">
+                <td colspan="3" class="py-2.5 px-3 text-left tracking-tight" id="lbl-total-amount">
+                  TOTAL AMOUNT DUE
+                </td>
+                <td class="py-2.5 px-3 text-right text-coco-navy" id="view-final-total">
+                  LKR 0.00
+                </td>
+              </tr>
+
+              <!-- RECEIPT ONLY ROWS: Tendered & Change -->
+              <tr id="view-tendered-row" class="bg-white text-slate-800 font-bold hidden border-b border-slate-200">
+                <td colspan="3" class="py-2 px-3 text-left text-slate-600">
+                  Cash Tendered / Paid by Guest
+                </td>
+                <td class="py-2 px-3 text-right text-coco-navy" id="view-tendered-val">
+                  LKR 0.00
+                </td>
+              </tr>
+
+              <tr id="view-change-row" class="bg-emerald-50 text-emerald-800 font-black text-[13px] border-b-2 border-emerald-600 hidden">
+                <td colspan="3" class="py-2 px-3 text-left tracking-tight" id="lbl-change-text">
+                  CHANGE RETURNED / HANDED OVER
+                </td>
+                <td class="py-2 px-3 text-right text-emerald-800" id="view-change-val">
+                  LKR 0.00
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- Paid Stamp (visible on receipts) -->
+          <div id="view-paid-stamp" class="hidden absolute top-[44%] right-10 paid-stamp text-emerald-800 px-5 py-2 rounded-lg font-black text-2xl uppercase tracking-widest opacity-90 select-none pointer-events-none">
+            PAID IN FULL
+          </div>
+
+          <!-- Notes / Confirmation Box -->
+          <div id="view-notes-box" class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 leading-relaxed">
+            <strong id="view-notes-heading" class="text-slate-800">Stay &amp; Payment Summary:</strong>
+            <p id="view-notes-content" class="mt-0.5">
+              Thank you for choosing Coco Villa Unawatuna. Payment is accepted in Sri Lankan Rupees (LKR) or United States Dollars (USD).
+            </p>
+          </div>
+        </div>
+
+        <!-- Bottom Page Block: Signatures & Legal Footer -->
+        <div class="mt-8 pt-3 border-t border-slate-200">
+          <div class="flex justify-between items-end mb-4">
+            <div class="w-44 text-center">
+              <div class="border-t border-dashed border-slate-400 pt-1 text-[10.5px] text-slate-500">
+                Guest Signature<br>
+                <strong id="view-sig-guest" class="text-slate-800 font-semibold">Yotam Zakai</strong>
+              </div>
+            </div>
+
+            <!-- Eco Hospitality Stamp Tagline -->
+            <div class="text-center text-[11px] italic font-serif text-slate-400">
+              "Look up. Slow down. Stay awhile in Unawatuna." 🌿
+            </div>
+
+            <div class="w-48 text-center">
+              <div class="border-t border-dashed border-slate-400 pt-1 text-[10.5px] text-slate-500">
+                Authorized Signatory<br>
+                <strong class="text-slate-800 font-semibold">Coco Villa Unawatuna</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between text-[10px] text-slate-400">
+            <span>Coco Villa Unawatuna • 70/7 Eramudugaha Junction, Matara Road, Unawatuna</span>
+            <span>Document Reference: <span id="view-footer-ref">INV-2026-1022</span></span>
+          </div>
+        </div>
+
+      </article>
+    </section>
+
+  </main>
+
+  <!-- WhatsApp Message Modal -->
+  <div id="modal-wa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 text-slate-800 flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+        <h3 class="font-display font-bold text-base text-emerald-800 flex items-center gap-2">
+          <span>📲</span> WhatsApp Message Generator
+        </h3>
+        <button type="button" onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-500 mt-2">
+        Pre-formatted hospitality message for WhatsApp with complete line breakdown and current exchange rate.
+      </p>
+
+      <div class="mt-3 flex-1 overflow-y-auto">
+        <textarea id="wa-text-content" rows="12" class="w-full text-xs font-mono bg-slate-50 p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 select-all"></textarea>
+      </div>
+
+      <div class="mt-4 flex flex-wrap gap-2 justify-end">
+        <button type="button" onclick="closeWhatsAppModal()" class="px-3 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          Close
+        </button>
+        <button type="button" id="btn-do-copy" onclick="copyWhatsAppText()" class="px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+          <span>📋</span> Copy Text
+        </button>
+        <button type="button" onclick="openWhatsAppDirect()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+          <span>🚀</span> Open WhatsApp Web
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION CORE JAVASCRIPT -->
+  <script>
+    const STORAGE_KEY = 'coco_villa_invoice_data_v2';
+    let docType = 'INVOICE'; // 'INVOICE' | 'RECEIPT'
+
+    // Default Sample Items
+    let items = [
+      {
+        id: 1,
+        type: 'Room Stay',
+        desc: 'Room Stay (Deluxe Double Room - Nights of Oct 20, 21, 22)',
+        qty: 3,
+        mode: 'USD',
+        unitUsd: 25.00,
+        unitLkr: 8400.00
+      },
+      {
+        id: 2,
+        type: 'Breakfast',
+        desc: 'Breakfast Service (Oct 21, 22, 23)',
+        qty: 3,
+        mode: 'LKR',
+        unitUsd: 4.46,
+        unitLkr: 1500.00
+      },
+      {
+        id: 3,
+        type: 'Lunch',
+        desc: 'Lunch Service (Oct 20)',
+        qty: 1,
+        mode: 'LKR',
+        unitUsd: 5.36,
+        unitLkr: 1800.00
+      }
+    ];
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          applySavedData(parsed);
+        } catch (e) {
+          initDefaultDates();
+        }
+      } else {
+        initDefaultDates();
+      }
+
+      renderLineItemsForm();
+      renderDoc();
+    });
+
+    function initDefaultDates() {
+      const today = new Date();
+      const cin = new Date();
+      const cout = new Date();
+      cout.setDate(cin.getDate() + 3);
+
+      document.getElementById('inp-doc-date').value = today.toISOString().split('T')[0];
+      document.getElementById('inp-checkin').value = cin.toISOString().split('T')[0];
+      document.getElementById('inp-checkout').value = cout.toISOString().split('T')[0];
+    }
+
+    // Switch Document Type
+    function setDocType(type) {
+      docType = type;
+      const tabInv = document.getElementById('tab-invoice');
+      const tabRec = document.getElementById('tab-receipt');
+      const docNumInp = document.getElementById('inp-doc-num');
+
+      if (type === 'INVOICE') {
+        tabInv.className = "py-2 text-xs sm:text-sm font-bold rounded-md transition shadow-sm bg-white text-coco-navy";
+        tabRec.className = "py-2 text-xs sm:text-sm font-bold rounded-md transition text-slate-600 hover:text-slate-900";
+        if (docNumInp.value.startsWith('REC-')) {
+          docNumInp.value = docNumInp.value.replace('REC-', 'INV-');
+        }
+      } else {
+        tabRec.className = "py-2 text-xs sm:text-sm font-bold rounded-md transition shadow-sm bg-white text-emerald-800";
+        tabInv.className = "py-2 text-xs sm:text-sm font-bold rounded-md transition text-slate-600 hover:text-slate-900";
+        if (docNumInp.value.startsWith('INV-')) {
+          docNumInp.value = docNumInp.value.replace('INV-', 'REC-');
+        }
+      }
+
+      handleFormChange();
+    }
+
+    // Auto calculate nights
+    function handleDateChange() {
+      const cin = new Date(document.getElementById('inp-checkin').value);
+      const cout = new Date(document.getElementById('inp-checkout').value);
+      if (cin && cout && cout > cin) {
+        const diffDays = Math.ceil((cout - cin) / (1000 * 60 * 60 * 24));
+        const roomItem = items.find(i => i.type === 'Room Stay');
+        if (roomItem) {
+          roomItem.qty = diffDays;
+          renderLineItemsForm();
+        }
+      }
+      handleFormChange();
+    }
+
+    // Recalculate currency prices on FX rate adjustment
+    function handleFxChange() {
+      const fx = parseFloat(document.getElementById('inp-fx-rate').value) || 336.00;
+      items.forEach(item => {
+        if (item.mode === 'USD') {
+          item.unitLkr = Math.round(item.unitUsd * fx);
+        } else {
+          item.unitUsd = parseFloat((item.unitLkr / fx).toFixed(2));
+        }
+      });
+      renderLineItemsForm();
+      handleFormChange();
+    }
+
+    // Add Preset Items
+    function quickAddItem(type, defaultDesc, qty, mode, price) {
+      const fx = parseFloat(document.getElementById('inp-fx-rate').value) || 336.00;
+      const newId = Date.now() + Math.floor(Math.random() * 100);
+
+      items.push({
+        id: newId,
+        type: type,
+        desc: defaultDesc,
+        qty: qty,
+        mode: mode,
+        unitUsd: mode === 'USD' ? price : parseFloat((price / fx).toFixed(2)),
+        unitLkr: mode === 'USD' ? Math.round(price * fx) : price
+      });
+
+      renderLineItemsForm();
+      handleFormChange();
+    }
+
+    // Add Custom Blank Item
+    function addNewLineItem() {
+      quickAddItem('Custom Item', 'Extra Hospitality Service', 1, 'LKR', 1000);
+    }
+
+    // Remove Item
+    function removeItem(id) {
+      if (items.length <= 1) {
+        alert("The document must contain at least one item.");
+        return;
+      }
+      items = items.filter(i => i.id !== id);
+      renderLineItemsForm();
+      handleFormChange();
+    }
+
+    // Update Field
+    function updateItemField(id, field, value) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      const fx = parseFloat(document.getElementById('inp-fx-rate').value) || 336.00;
+
+      if (field === 'qty') {
+        item.qty = parseFloat(value) || 0;
+      } else if (field === 'desc') {
+        item.desc = value;
+      } else if (field === 'mode') {
+        item.mode = value;
+        if (value === 'USD') {
+          item.unitLkr = Math.round(item.unitUsd * fx);
+        } else {
+          item.unitUsd = parseFloat((item.unitLkr / fx).toFixed(2));
+        }
+      } else if (field === 'unitUsd') {
+        item.unitUsd = parseFloat(value) || 0;
+        item.unitLkr = Math.round(item.unitUsd * fx);
+      } else if (field === 'unitLkr') {
+        item.unitLkr = parseFloat(value) || 0;
+        item.unitUsd = parseFloat((item.unitLkr / fx).toFixed(2));
+      }
+
+      renderLineItemsForm();
+      handleFormChange();
+    }
+
+    // Render Editable Form Lines
+    function renderLineItemsForm() {
+      const container = document.getElementById('line-items-container');
+      container.innerHTML = '';
+
+      items.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = "p-2.5 bg-white border border-slate-200 rounded-lg shadow-2xs space-y-2";
+        row.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <input type="text" value="${escapeHtml(item.desc)}" onchange="updateItemField(${item.id}, 'desc', this.value)" class="flex-1 px-2 py-1 border border-slate-300 rounded text-xs font-medium text-slate-800" placeholder="Item description">
+            <button type="button" onclick="removeItem(${item.id})" class="text-rose-500 hover:text-rose-700 px-1 text-sm font-bold" title="Delete Item">&times;</button>
+          </div>
+          <div class="grid grid-cols-3 gap-2 items-center">
+            <div>
+              <label class="block text-[10px] text-slate-500">Qty</label>
+              <input type="number" step="1" min="1" value="${item.qty}" onchange="updateItemField(${item.id}, 'qty', this.value)" class="w-full px-2 py-1 border border-slate-300 rounded text-xs">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Base Currency</label>
+              <select onchange="updateItemField(${item.id}, 'mode', this.value)" class="w-full px-1.5 py-1 border border-slate-300 rounded text-xs bg-slate-50">
+                <option value="USD" ${item.mode === 'USD' ? 'selected' : ''}>Fixed USD ($)</option>
+                <option value="LKR" ${item.mode === 'LKR' ? 'selected' : ''}>Fixed LKR (Rs)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Unit Price</label>
+              ${item.mode === 'USD' 
+                ? `<div class="relative"><span class="absolute left-1.5 top-1 text-[11px] text-slate-400 font-bold">$</span><input type="number" step="0.5" value="${item.unitUsd}" onchange="updateItemField(${item.id}, 'unitUsd', this.value)" class="w-full pl-5 pr-1 py-1 border border-slate-300 rounded text-xs font-semibold"></div>`
+                : `<div class="relative"><span class="absolute left-1 top-1 text-[10px] text-slate-400 font-bold">LKR</span><input type="number" step="50" value="${item.unitLkr}" onchange="updateItemField(${item.id}, 'unitLkr', this.value)" class="w-full pl-8 pr-1 py-1 border border-slate-300 rounded text-xs font-semibold"></div>`
+              }
+            </div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // Primary Render
+    function renderDoc() {
+      const fxRate = parseFloat(document.getElementById('inp-fx-rate').value) || 336.00;
+      const showUsd = document.getElementById('chk-show-usd').checked;
+      const isReceipt = (docType === 'RECEIPT');
+
+      // Header Elements
+      const docHeaderRow = document.getElementById('doc-header-row');
+      const docTitle = document.getElementById('view-doc-title');
+      const cardTitle1 = document.getElementById('view-card-title-1');
+      const cardTitle2 = document.getElementById('view-card-title-2');
+
+      if (isReceipt) {
+        docHeaderRow.className = "flex justify-between items-start pb-4 border-b-2 border-emerald-800 transition-colors duration-200";
+        docTitle.className = "font-display font-black text-xl tracking-wider uppercase text-emerald-800";
+        docTitle.innerText = "Payment Receipt";
+        cardTitle1.className = "font-bold text-[10px] uppercase tracking-wider text-emerald-800 mb-1.5";
+        cardTitle2.className = "font-bold text-[10px] uppercase tracking-wider text-emerald-800 mb-1.5";
+      } else {
+        docHeaderRow.className = "flex justify-between items-start pb-4 border-b-2 border-coco-navy transition-colors duration-200";
+        docTitle.className = "font-display font-black text-xl tracking-wider uppercase text-coco-navy";
+        docTitle.innerText = "Official Invoice";
+        cardTitle1.className = "font-bold text-[10px] uppercase tracking-wider text-coco-navy mb-1.5";
+        cardTitle2.className = "font-bold text-[10px] uppercase tracking-wider text-coco-navy mb-1.5";
+      }
+
+      // Guest & Hotel Information
+      const guestName = document.getElementById('inp-guest-name').value.trim() || 'Valued Guest';
+      document.getElementById('view-guest-name').innerText = guestName;
+      document.getElementById('view-sig-guest').innerText = guestName;
+
+      const docNum = document.getElementById('inp-doc-num').value;
+      document.getElementById('view-doc-num').innerText = docNum;
+      document.getElementById('view-footer-ref').innerText = docNum;
+
+      document.getElementById('view-doc-date').innerText = formatDateStr(document.getElementById('inp-doc-date').value);
+      document.getElementById('view-checkin').innerText = formatDateStr(document.getElementById('inp-checkin').value);
+      document.getElementById('view-checkout').innerText = formatDateStr(document.getElementById('inp-checkout').value);
+      document.getElementById('view-room-type').innerText = document.getElementById('inp-room-type').value;
+      document.getElementById('view-guests-count').innerText = document.getElementById('inp-guests-count').value;
+      document.getElementById('view-booking-ref').innerText = document.getElementById('inp-booking-ref').value;
+      document.getElementById('view-pay-method').innerText = document.getElementById('inp-pay-method').value;
+
+      document.getElementById('view-fx-bank').innerText = document.getElementById('inp-fx-bank').value;
+      document.getElementById('view-fx-rate').innerText = fxRate.toFixed(2);
+
+      // Render Itemized Table Rows
+      const tbody = document.getElementById('view-items-tbody');
+      tbody.innerHTML = '';
+
+      let subtotalLkr = 0;
+      let subtotalUsd = 0;
+
+      items.forEach(item => {
+        let lineLkr = 0;
+        let lineUsd = 0;
+
+        if (item.mode === 'USD') {
+          lineUsd = item.qty * item.unitUsd;
+          lineLkr = Math.round(lineUsd * fxRate);
+        } else {
+          lineLkr = item.qty * item.unitLkr;
+          lineUsd = parseFloat((lineLkr / fxRate).toFixed(2));
+        }
+
+        subtotalLkr += lineLkr;
+        subtotalUsd += lineUsd;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/50";
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-left">
+            <strong class="text-slate-800">${escapeHtml(item.desc)}</strong>
+          </td>
+          <td class="py-2 px-2 text-center text-slate-600 font-medium">${item.qty}</td>
+          <td class="py-2 px-3 text-right text-slate-600">
+            ${formatCurrencyLkr(item.mode === 'USD' ? item.unitUsd * fxRate : item.unitLkr)}
+            ${showUsd ? `<span class="block text-[10.5px] text-slate-400 font-normal">[US$ ${(item.mode === 'USD' ? item.unitUsd : item.unitLkr / fxRate).toFixed(2)}]</span>` : ''}
+          </td>
+          <td class="py-2 px-3 text-right font-semibold text-slate-900">
+            ${formatCurrencyLkr(lineLkr)}
+            ${showUsd ? `<span class="block text-[10.5px] text-slate-500 font-normal">[US$ ${lineUsd.toFixed(2)}]</span>` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Sub Total
+      document.getElementById('view-subtotal').innerHTML = `
+        ${formatCurrencyLkr(subtotalLkr)}
+        ${showUsd ? `<span class="block text-[11px] font-normal text-slate-500">[US$ ${subtotalUsd.toFixed(2)}]</span>` : ''}
+      `;
+
+      // Deductions / Previous Balance
+      const deductionLkr = parseFloat(document.getElementById('inp-deduction').value) || 0;
+      const deductionReason = document.getElementById('inp-deduction-reason').value;
+      const deductionRow = document.getElementById('view-deduction-row');
+
+      if (deductionLkr > 0) {
+        deductionRow.classList.remove('hidden');
+        const deductionUsd = (deductionLkr / fxRate).toFixed(2);
+        document.getElementById('view-deduction-note').innerText = deductionReason;
+        document.getElementById('view-deduction-val').innerHTML = `
+          - ${formatCurrencyLkr(deductionLkr)}
+          ${showUsd ? `<span class="block text-[10.5px] font-normal text-emerald-700">[- US$ ${deductionUsd}]</span>` : ''}
+        `;
+      } else {
+        deductionRow.classList.add('hidden');
+      }
+
+      // Net Amount Payable
+      const netPayableLkr = Math.max(0, subtotalLkr - deductionLkr);
+      const netPayableUsd = (netPayableLkr / fxRate).toFixed(2);
+
+      const finalTotalElem = document.getElementById('view-final-total');
+      const totalDueRow = document.getElementById('view-total-due-row');
+      const lblTotalAmount = document.getElementById('lbl-total-amount');
+
+      finalTotalElem.innerHTML = `
+        ${formatCurrencyLkr(netPayableLkr)}
+        ${showUsd ? `<span class="block text-[11.5px] font-bold text-coco-navy">[US$ ${netPayableUsd}]</span>` : ''}
+      `;
+
+      // Receipt Elements
+      const tenderedRow = document.getElementById('view-tendered-row');
+      const changeRow = document.getElementById('view-change-row');
+      const paidStamp = document.getElementById('view-paid-stamp');
+      const notesHeading = document.getElementById('view-notes-heading');
+      const notesContent = document.getElementById('view-notes-content');
+
+      const cashPaid = parseFloat(document.getElementById('inp-cash-paid').value) || 0;
+      const changeLkr = cashPaid - netPayableLkr;
+      const settlementStatus = document.getElementById('inp-settlement-status').value;
+
+      if (isReceipt) {
+        tenderedRow.classList.remove('hidden');
+        changeRow.classList.remove('hidden');
+        paidStamp.classList.remove('hidden');
+        totalDueRow.className = "bg-slate-100 font-extrabold text-[13px] text-slate-800 border-t border-slate-300";
+        lblTotalAmount.innerText = "TOTAL CHARGES DUE";
+
+        const cashPaidUsd = (cashPaid / fxRate).toFixed(2);
+        document.getElementById('view-tendered-val').innerHTML = `
+          ${formatCurrencyLkr(cashPaid)}
+          ${showUsd ? `<span class="block text-[10.5px] font-normal text-slate-500">[US$ ${cashPaidUsd}]</span>` : ''}
+        `;
+
+        if (changeLkr >= 0) {
+          const changeUsd = (changeLkr / fxRate).toFixed(2);
+          document.getElementById('lbl-change-text').innerText = settlementStatus === 'CHANGE_PENDING' ? "CHANGE PENDING RETURN TO GUEST" : "CHANGE RETURNED / HANDED OVER";
+          document.getElementById('view-change-val').innerHTML = `
+            ${formatCurrencyLkr(changeLkr)}
+            ${showUsd ? `<span class="block text-[10.5px] font-normal text-emerald-800">[US$ ${changeUsd}]</span>` : ''}
+          `;
+          notesHeading.innerText = "Payment & Settlement Confirmation:";
+          notesContent.innerHTML = `Payment of <strong>${formatCurrencyLkr(cashPaid)}</strong> received with thanks. ${changeLkr > 0 ? `Change of <strong>${formatCurrencyLkr(changeLkr)}</strong> ${settlementStatus === 'CHANGE_PENDING' ? 'is pending return to guest.' : 'was handed over in cash.'}` : 'Account is fully settled with zero balance.'} Thank you for staying with us!`;
+        } else {
+          const shortLkr = Math.abs(changeLkr);
+          document.getElementById('lbl-change-text').innerText = "REMAINING BALANCE DUE";
+          document.getElementById('view-change-val').innerText = formatCurrencyLkr(shortLkr);
+          notesHeading.innerText = "Partial Payment Received:";
+          notesContent.innerHTML = `Received partial payment of <strong>${formatCurrencyLkr(cashPaid)}</strong>. Remaining balance due is <strong>${formatCurrencyLkr(shortLkr)}</strong>.`;
+        }
+
+      } else {
+        // Invoice Mode
+        tenderedRow.classList.add('hidden');
+        changeRow.classList.add('hidden');
+        paidStamp.classList.add('hidden');
+        totalDueRow.className = "bg-slate-100 font-extrabold text-[13.5px] text-slate-900 border-t-2 border-coco-navy border-b-2";
+        lblTotalAmount.innerText = "TOTAL AMOUNT DUE";
+
+        notesHeading.innerText = "Stay & Payment Information:";
+        notesContent.innerHTML = `Payment is accepted in Sri Lankan Rupees (LKR) or United States Dollars (USD) according to Sampath Bank selling rates. Thank you for staying with us at Coco Villa Unawatuna!`;
+      }
+    }
+
+    // Auto Save & Change Handler
+    function handleFormChange() {
+      renderDoc();
+      saveToStorage();
+    }
+
+    function saveToStorage() {
+      const data = {
+        docType,
+        guestName: document.getElementById('inp-guest-name').value,
+        docNum: document.getElementById('inp-doc-num').value,
+        docDate: document.getElementById('inp-doc-date').value,
+        checkin: document.getElementById('inp-checkin').value,
+        checkout: document.getElementById('inp-checkout').value,
+        roomType: document.getElementById('inp-room-type').value,
+        guestsCount: document.getElementById('inp-guests-count').value,
+        bookingRef: document.getElementById('inp-booking-ref').value,
+        fxRate: document.getElementById('inp-fx-rate').value,
+        fxBank: document.getElementById('inp-fx-bank').value,
+        showUsd: document.getElementById('chk-show-usd').checked,
+        deduction: document.getElementById('inp-deduction').value,
+        deductionReason: document.getElementById('inp-deduction-reason').value,
+        cashPaid: document.getElementById('inp-cash-paid').value,
+        payMethod: document.getElementById('inp-pay-method').value,
+        settlementStatus: document.getElementById('inp-settlement-status').value,
+        items
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function applySavedData(data) {
+      if (!data) return;
+      if (data.docType) docType = data.docType;
+      if (data.guestName) document.getElementById('inp-guest-name').value = data.guestName;
+      if (data.docNum) document.getElementById('inp-doc-num').value = data.docNum;
+      if (data.docDate) document.getElementById('inp-doc-date').value = data.docDate;
+      if (data.checkin) document.getElementById('inp-checkin').value = data.checkin;
+      if (data.checkout) document.getElementById('inp-checkout').value = data.checkout;
+      if (data.roomType) document.getElementById('inp-room-type').value = data.roomType;
+      if (data.guestsCount) document.getElementById('inp-guests-count').value = data.guestsCount;
+      if (data.bookingRef) document.getElementById('inp-booking-ref').value = data.bookingRef;
+      if (data.fxRate) document.getElementById('inp-fx-rate').value = data.fxRate;
+      if (data.fxBank) document.getElementById('inp-fx-bank').value = data.fxBank;
+      if (data.showUsd !== undefined) document.getElementById('chk-show-usd').checked = data.showUsd;
+      if (data.deduction) document.getElementById('inp-deduction').value = data.deduction;
+      if (data.deductionReason) document.getElementById('inp-deduction-reason').value = data.deductionReason;
+      if (data.cashPaid) document.getElementById('inp-cash-paid').value = data.cashPaid;
+      if (data.payMethod) document.getElementById('inp-pay-method').value = data.payMethod;
+      if (data.settlementStatus) document.getElementById('inp-settlement-status').value = data.settlementStatus;
+      if (data.items && Array.isArray(data.items) && data.items.length > 0) items = data.items;
+
+      setDocType(docType);
+    }
+
+    // Sample Preset: Yotam Zakai
+    function loadSampleGuest() {
+      document.getElementById('inp-guest-name').value = "Yotam Zakai";
+      document.getElementById('inp-room-type').value = "Deluxe Double Room";
+      document.getElementById('inp-guests-count').value = "1 Adult";
+      document.getElementById('inp-booking-ref').value = "Direct Extension Stay";
+      document.getElementById('inp-doc-num').value = "DIR-2026-1022";
+      document.getElementById('inp-doc-date').value = "2026-10-22";
+      document.getElementById('inp-checkin').value = "2026-10-20";
+      document.getElementById('inp-checkout').value = "2026-10-23";
+      document.getElementById('inp-fx-rate').value = "336.00";
+      document.getElementById('inp-fx-bank').value = "Sampath Bank PLC";
+      document.getElementById('inp-deduction').value = "0";
+      document.getElementById('inp-cash-paid').value = "31500";
+
+      items = [
+        {
+          id: 1,
+          type: 'Room Stay',
+          desc: 'Room Stay (Deluxe Double Room - Nights of Oct 20, 21, 22)',
+          qty: 3,
+          mode: 'USD',
+          unitUsd: 25.00,
+          unitLkr: 8400.00
+        },
+        {
+          id: 2,
+          type: 'Breakfast',
+          desc: 'Breakfast Service (Oct 21, 22, 23)',
+          qty: 3,
+          mode: 'LKR',
+          unitUsd: 4.46,
+          unitLkr: 1500.00
+        },
+        {
+          id: 3,
+          type: 'Lunch',
+          desc: 'Lunch Service (Oct 20)',
+          qty: 1,
+          mode: 'LKR',
+          unitUsd: 5.36,
+          unitLkr: 1800.00
+        }
+      ];
+
+      renderLineItemsForm();
+      handleFormChange();
+    }
+
+    // Clear Form
+    function clearForm() {
+      if (!confirm("Are you sure you want to clear the current draft?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      items = [
+        {
+          id: Date.now(),
+          type: 'Room Stay',
+          desc: 'Room Stay',
+          qty: 1,
+          mode: 'USD',
+          unitUsd: 25.00,
+          unitLkr: 8400.00
+        }
+      ];
+      initDefaultDates();
+      document.getElementById('inp-guest-name').value = "";
+      document.getElementById('inp-doc-num').value = "INV-" + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('inp-deduction').value = "0";
+      document.getElementById('inp-cash-paid').value = "0";
+      renderLineItemsForm();
+      handleFormChange();
+    }
+
+    // WhatsApp Formatter & Handler
+    function generateWhatsAppMessageText() {
+      const guestName = document.getElementById('inp-guest-name').value.trim() || 'Guest';
+      const fxRate = parseFloat(document.getElementById('inp-fx-rate').value) || 336.00;
+      const isReceipt = (docType === 'RECEIPT');
+
+      let subtotalLkr = 0;
+      let itemsListText = '';
+
+      items.forEach(item => {
+        let lineLkr = (item.mode === 'USD') ? Math.round(item.qty * item.unitUsd * fxRate) : (item.qty * item.unitLkr);
+        let lineUsd = (lineLkr / fxRate).toFixed(2);
+        subtotalLkr += lineLkr;
+        itemsListText += `• *${item.desc}:* LKR ${lineLkr.toLocaleString()} [US$ ${lineUsd}]\n`;
+      });
+
+      const deductionLkr = parseFloat(document.getElementById('inp-deduction').value) || 0;
+      let deductionText = '';
+      if (deductionLkr > 0) {
+        deductionText = `• *Minus previous change credit:* - LKR ${deductionLkr.toLocaleString()} [- US$ ${(deductionLkr / fxRate).toFixed(2)}]\n`;
+      }
+
+      const netPayableLkr = Math.max(0, subtotalLkr - deductionLkr);
+      const netPayableUsd = (netPayableLkr / fxRate).toFixed(2);
+
+      if (isReceipt) {
+        const cashPaid = parseFloat(document.getElementById('inp-cash-paid').value) || 0;
+        const changeLkr = cashPaid - netPayableLkr;
+
+        return `Hi ${guestName}! 🌿\n\n`
+          + `Thank you so much for staying with us at Coco Villa Unawatuna. Here is your official payment receipt confirming your stay:\n\n`
+          + itemsListText
+          + (deductionText ? deductionText : '')
+          + `*Total Stay Amount:* LKR ${netPayableLkr.toLocaleString()} [US$ ${netPayableUsd}]\n`
+          + `*Cash Tendered:* LKR ${cashPaid.toLocaleString()}\n`
+          + (changeLkr > 0 ? `*Change Returned:* LKR ${changeLkr.toLocaleString()} [US$ ${(changeLkr / fxRate).toFixed(2)}]\n` : '')
+          + `*Balance Remaining:* LKR 0.00 (Fully Settled)\n\n`
+          + `Have a safe and relaxing onward journey, and we look forward to welcoming you back again! 🌴✨`;
+      } else {
+        return `Hi ${guestName}! 🌿\n\n`
+          + `Hope you are having a wonderful stay at Coco Villa Unawatuna. Here is your itemized invoice with today's Sampath Bank rate (1 USD = ${fxRate.toFixed(2)} LKR):\n\n`
+          + itemsListText
+          + (deductionText ? deductionText : '')
+          + `*Total Amount Due: LKR ${netPayableLkr.toLocaleString()} [US$ ${netPayableUsd}]*\n\n`
+          + `Whenever you have a free moment today, please let us know if you would like to complete the settlement. Thank you so much! 😊`;
+      }
+    }
+
+    function openWhatsAppModal() {
+      document.getElementById('wa-text-content').value = generateWhatsAppMessageText();
+      document.getElementById('modal-wa').classList.remove('hidden');
+    }
+
+    function closeWhatsAppModal() {
+      document.getElementById('modal-wa').classList.add('hidden');
+    }
+
+    function copyWhatsAppText() {
+      const copyText = document.getElementById('wa-text-content');
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        const btn = document.getElementById('btn-do-copy');
+        btn.innerHTML = '<span>✅</span> Copied!';
+        btn.classList.replace('bg-emerald-700', 'bg-emerald-800');
+        setTimeout(() => {
+          btn.innerHTML = '<span>📋</span> Copy Text';
+          btn.classList.replace('bg-emerald-800', 'bg-emerald-700');
+        }, 2000);
+      } catch (err) {
+        alert('Please select and copy the text manually.');
+      }
+    }
+
+    function openWhatsAppDirect() {
+      const text = encodeURIComponent(generateWhatsAppMessageText());
+      window.open(`https://web.whatsapp.com/send?text=${text}`, '_blank');
+    }
+
+    // Currency & String Helpers
+    function formatCurrencyLkr(amount) {
+      return 'LKR ' + (Number(amount) || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatDateStr(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      return d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
